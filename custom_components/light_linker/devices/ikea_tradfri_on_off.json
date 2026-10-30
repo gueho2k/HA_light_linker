@@ -1,0 +1,41 @@
+{
+ "id": "ikea_tradfri_on_off",
+ "name": "IKEA TRADFRI Ein/Aus-Schalter",
+ "match": [
+  "E1743",
+  "TRADFRI on/off switch"
+ ],
+ "frame": {
+  "w": 64,
+  "h": 104,
+  "r": 16
+ },
+ "buttons": [
+  {
+   "id": "I",
+   "label": "I",
+   "x": 0,
+   "y": 0,
+   "w": 64,
+   "h": 52,
+   "slots": [
+    ":on",
+    ":hold_up"
+   ]
+  },
+  {
+   "id": "O",
+   "label": "O",
+   "x": 0,
+   "y": 52,
+   "w": 64,
+   "h": 52,
+   "slots": [
+    ":off",
+    ":hold_down"
+   ]
+  }
+ ],
+ "hold_end": "release",
+ "native_multi": false
+}

@@ -1,0 +1,83 @@
+{
+ "id": "ikea_tradfri_remote",
+ "name": "IKEA TRADFRI Fernbedienung",
+ "match": [
+  "E1524",
+  "E1810",
+  "TRADFRI remote control"
+ ],
+ "frame": {
+  "w": 104,
+  "h": 104,
+  "r": 52
+ },
+ "buttons": [
+  {
+   "id": "brightness_up",
+   "label": "☀+",
+   "x": 32,
+   "y": 4,
+   "w": 40,
+   "h": 28,
+   "slots": [
+    "brightness_up:press",
+    "brightness_up:hold"
+   ],
+   "r": 10
+  },
+  {
+   "id": "arrow_left",
+   "label": "‹",
+   "x": 4,
+   "y": 36,
+   "w": 26,
+   "h": 32,
+   "slots": [
+    "arrow_left:press",
+    "arrow_left:hold"
+   ],
+   "r": 10
+  },
+  {
+   "id": "toggle",
+   "label": "⏻",
+   "x": 34,
+   "y": 34,
+   "w": 36,
+   "h": 36,
+   "slots": [
+    ":press",
+    "toggle:hold"
+   ],
+   "r": 18
+  },
+  {
+   "id": "arrow_right",
+   "label": "›",
+   "x": 74,
+   "y": 36,
+   "w": 26,
+   "h": 32,
+   "slots": [
+    "arrow_right:press",
+    "arrow_right:hold"
+   ],
+   "r": 10
+  },
+  {
+   "id": "brightness_down",
+   "label": "☀−",
+   "x": 32,
+   "y": 72,
+   "w": 40,
+   "h": 28,
+   "slots": [
+    "brightness_down:press",
+    "brightness_down:hold"
+   ],
+   "r": 10
+  }
+ ],
+ "hold_end": "release",
+ "native_multi": false
+}

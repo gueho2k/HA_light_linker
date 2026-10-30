@@ -1,0 +1,46 @@
+{
+ "id": "philips_hue_wall_module",
+ "name": "Philips Hue Wandschaltermodul",
+ "match": [
+  "RDM001",
+  "RDM004",
+  "929003017102",
+  "Hue wall switch module"
+ ],
+ "frame": {
+  "w": 128,
+  "h": 84,
+  "r": 10,
+  "style": "wall"
+ },
+ "buttons": [
+  {
+   "id": "left",
+   "label": "links",
+   "x": 0,
+   "y": 0,
+   "w": 64,
+   "h": 84,
+   "slots": [
+    "left:press",
+    "left:double",
+    "left:hold"
+   ]
+  },
+  {
+   "id": "right",
+   "label": "rechts",
+   "x": 64,
+   "y": 0,
+   "w": 64,
+   "h": 84,
+   "slots": [
+    "right:press",
+    "right:double",
+    "right:hold"
+   ]
+  }
+ ],
+ "hold_end": "release",
+ "native_multi": false
+}

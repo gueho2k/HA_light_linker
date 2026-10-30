@@ -1,0 +1,45 @@
+{
+ "id": "tuya_ts0042",
+ "name": "Tuya/Moes Szenentaster 2-fach",
+ "match": [
+  "TS0042",
+  "Scene remote with 2 keys",
+  "Wireless switch with 2 buttons",
+  "ZT-B-EU2"
+ ],
+ "frame": {
+  "w": 96,
+  "h": 96,
+  "r": 10
+ },
+ "buttons": [
+  {
+   "id": "1",
+   "label": "1",
+   "x": 0,
+   "y": 0,
+   "w": 48,
+   "h": 96,
+   "slots": [
+    "1:press",
+    "1:double",
+    "1:hold"
+   ]
+  },
+  {
+   "id": "2",
+   "label": "2",
+   "x": 48,
+   "y": 0,
+   "w": 48,
+   "h": 96,
+   "slots": [
+    "2:press",
+    "2:double",
+    "2:hold"
+   ]
+  }
+ ],
+ "hold_end": "none",
+ "native_multi": true
+}

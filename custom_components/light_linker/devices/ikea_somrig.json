@@ -1,0 +1,43 @@
+{
+ "id": "ikea_somrig",
+ "name": "IKEA SOMRIG",
+ "match": [
+  "E2213",
+  "SOMRIG"
+ ],
+ "frame": {
+  "w": 64,
+  "h": 104,
+  "r": 16
+ },
+ "buttons": [
+  {
+   "id": "1",
+   "label": "•",
+   "x": 0,
+   "y": 0,
+   "w": 64,
+   "h": 52,
+   "slots": [
+    "1:press",
+    "1:double",
+    "1:hold"
+   ]
+  },
+  {
+   "id": "2",
+   "label": "••",
+   "x": 0,
+   "y": 52,
+   "w": 64,
+   "h": 52,
+   "slots": [
+    "2:press",
+    "2:double",
+    "2:hold"
+   ]
+  }
+ ],
+ "hold_end": "release",
+ "native_multi": true
+}

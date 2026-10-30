@@ -1,0 +1,32 @@
+{
+ "id": "aqara_single_wireless",
+ "name": "Aqara Wandtaster 1-fach",
+ "match": [
+  "WXKG03LM",
+  "WXKG06LM",
+  "lumi.remote.b186acn01",
+  "lumi.remote.b186acn02"
+ ],
+ "frame": {
+  "w": 96,
+  "h": 96,
+  "r": 10
+ },
+ "buttons": [
+  {
+   "id": "main",
+   "label": "",
+   "x": 0,
+   "y": 0,
+   "w": 96,
+   "h": 96,
+   "slots": [
+    ":press",
+    ":double",
+    ":hold"
+   ]
+  }
+ ],
+ "hold_end": "none",
+ "native_multi": true
+}

@@ -1,0 +1,41 @@
+{
+ "id": "ikea_rodret",
+ "name": "IKEA RODRET",
+ "match": [
+  "E2201",
+  "RODRET"
+ ],
+ "frame": {
+  "w": 64,
+  "h": 104,
+  "r": 16
+ },
+ "buttons": [
+  {
+   "id": "I",
+   "label": "I",
+   "x": 0,
+   "y": 0,
+   "w": 64,
+   "h": 52,
+   "slots": [
+    ":on",
+    ":hold_up"
+   ]
+  },
+  {
+   "id": "O",
+   "label": "O",
+   "x": 0,
+   "y": 52,
+   "w": 64,
+   "h": 52,
+   "slots": [
+    ":off",
+    ":hold_down"
+   ]
+  }
+ ],
+ "hold_end": "release",
+ "native_multi": false
+}

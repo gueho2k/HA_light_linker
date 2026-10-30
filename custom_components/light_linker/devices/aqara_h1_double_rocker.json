@@ -1,0 +1,60 @@
+{
+ "id": "aqara_h1_double_rocker",
+ "name": "Aqara H1 Wippe doppelt (kabellos)",
+ "match": [
+  "WXKG15LM",
+  "lumi.remote.b28ac1",
+  "H1 (double rocker)"
+ ],
+ "frame": {
+  "w": 96,
+  "h": 96,
+  "r": 10
+ },
+ "buttons": [
+  {
+   "id": "left",
+   "label": "",
+   "x": 0,
+   "y": 0,
+   "w": 48,
+   "h": 96,
+   "slots": [
+    "left:press",
+    "left:double",
+    "left:triple",
+    "left:hold"
+   ]
+  },
+  {
+   "id": "right",
+   "label": "",
+   "x": 48,
+   "y": 0,
+   "w": 48,
+   "h": 96,
+   "slots": [
+    "right:press",
+    "right:double",
+    "right:triple",
+    "right:hold"
+   ]
+  },
+  {
+   "id": "both",
+   "label": "beide",
+   "x": 0,
+   "y": 0,
+   "w": 0,
+   "h": 0,
+   "slots": [
+    "both:press",
+    "both:double",
+    "both:triple",
+    "both:hold"
+   ]
+  }
+ ],
+ "hold_end": "none",
+ "native_multi": true
+}

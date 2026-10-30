@@ -1,0 +1,32 @@
+{
+ "id": "tuya_ts0041",
+ "name": "Tuya/Moes Szenentaster 1-fach",
+ "match": [
+  "TS0041",
+  "Scene remote with 1 key",
+  "Wireless switch with 1 button",
+  "ZT-B-EU1"
+ ],
+ "frame": {
+  "w": 96,
+  "h": 96,
+  "r": 10
+ },
+ "buttons": [
+  {
+   "id": "1",
+   "label": "1",
+   "x": 0,
+   "y": 0,
+   "w": 96,
+   "h": 96,
+   "slots": [
+    "1:press",
+    "1:double",
+    "1:hold"
+   ]
+  }
+ ],
+ "hold_end": "none",
+ "native_multi": true
+}

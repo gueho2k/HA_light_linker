@@ -1,0 +1,73 @@
+{
+ "id": "philips_hue_dimmer",
+ "name": "Philips Hue Dimmschalter",
+ "match": [
+  "RWL020",
+  "RWL021",
+  "RWL022",
+  "324131092621",
+  "929002398602",
+  "Hue dimmer switch"
+ ],
+ "frame": {
+  "w": 56,
+  "h": 124,
+  "r": 12
+ },
+ "buttons": [
+  {
+   "id": "on",
+   "label": "I",
+   "x": 0,
+   "y": 0,
+   "w": 56,
+   "h": 31,
+   "slots": [
+    "on:press",
+    "on:double",
+    "on:hold"
+   ]
+  },
+  {
+   "id": "up",
+   "label": "+",
+   "x": 0,
+   "y": 31,
+   "w": 56,
+   "h": 31,
+   "slots": [
+    "up:press",
+    "up:double",
+    "up:hold"
+   ]
+  },
+  {
+   "id": "down",
+   "label": "−",
+   "x": 0,
+   "y": 62,
+   "w": 56,
+   "h": 31,
+   "slots": [
+    "down:press",
+    "down:double",
+    "down:hold"
+   ]
+  },
+  {
+   "id": "off",
+   "label": "O",
+   "x": 0,
+   "y": 93,
+   "w": 56,
+   "h": 31,
+   "slots": [
+    "off:press",
+    "off:double",
+    "off:hold"
+   ]
+  }
+ ],
+ "hold_end": "release",
+ "native_multi": false
+}

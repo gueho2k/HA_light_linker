@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Light Linker",
+        "description": "Light Linker adds a sidebar panel where you link buttons and switches to lights, plugs and gates."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Light Linker is already set up."
+    }
+  },
+  "services": {
+    "trigger": {
+      "name": "Trigger link",
+      "description": "Simulates a button event for a link, also when the link is disabled.",
+      "fields": {
+        "link_id": {
+          "name": "Link ID",
+          "description": "ID of the link (attribute link_id of its switch)."
+        },
+        "kind": {
+          "name": "Event",
+          "description": "Which button event to simulate."
+        }
+      }
+    }
+  },
+  "selector": {
+    "kind": {
+      "options": {
+        "press": "Press",
+        "double": "Double press",
+        "triple": "Triple press",
+        "hold_start": "Hold",
+        "hold_end": "Release",
+        "on": "On",
+        "off": "Off",
+        "toggle": "Toggle"
+      }
+    }
+  },
+  "issues": {
+    "link_broken": {
+      "title": "Light Linker: link \"{name}\" is incomplete",
+      "description": "These sources or targets no longer exist: {missing}. Open Light Linker in the sidebar and pick them again or delete the link."
+    },
+    "z2m_migration": {
+      "title": "Light Linker: move to Zigbee2MQTT possible",
+      "description": "{count} sources or targets of your links are now paired with Zigbee2MQTT. Open Light Linker in the sidebar and choose \"Move\"."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "motion_state": {
+        "name": "Status",
+        "state": {
+          "off": "Off",
+          "auto": "On by motion",
+          "runout": "Run-on",
+          "manual": "On by hand",
+          "blocked": "Blocked",
+          "inactive": "Inactive"
+        }
+      }
+    }
+  }
+}

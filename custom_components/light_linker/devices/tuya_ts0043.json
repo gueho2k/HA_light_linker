@@ -1,0 +1,58 @@
+{
+ "id": "tuya_ts0043",
+ "name": "Tuya/Moes Szenentaster 3-fach",
+ "match": [
+  "TS0043",
+  "Scene remote with 3 keys",
+  "Wireless switch with 3 buttons",
+  "ZT-B-EU3"
+ ],
+ "frame": {
+  "w": 96,
+  "h": 96,
+  "r": 10
+ },
+ "buttons": [
+  {
+   "id": "1",
+   "label": "1",
+   "x": 0,
+   "y": 0,
+   "w": 32,
+   "h": 96,
+   "slots": [
+    "1:press",
+    "1:double",
+    "1:hold"
+   ]
+  },
+  {
+   "id": "2",
+   "label": "2",
+   "x": 32,
+   "y": 0,
+   "w": 32,
+   "h": 96,
+   "slots": [
+    "2:press",
+    "2:double",
+    "2:hold"
+   ]
+  },
+  {
+   "id": "3",
+   "label": "3",
+   "x": 64,
+   "y": 0,
+   "w": 32,
+   "h": 96,
+   "slots": [
+    "3:press",
+    "3:double",
+    "3:hold"
+   ]
+  }
+ ],
+ "hold_end": "none",
+ "native_multi": true
+}

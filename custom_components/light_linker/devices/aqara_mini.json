@@ -1,0 +1,34 @@
+{
+ "id": "aqara_mini",
+ "name": "Aqara Mini-Taster",
+ "match": [
+  "WXKG11LM",
+  "WXKG12LM",
+  "lumi.sensor_switch.aq2",
+  "lumi.sensor_switch.aq3"
+ ],
+ "frame": {
+  "w": 72,
+  "h": 72,
+  "r": 36
+ },
+ "buttons": [
+  {
+   "id": "main",
+   "label": "",
+   "x": 10,
+   "y": 10,
+   "w": 52,
+   "h": 52,
+   "slots": [
+    ":press",
+    ":double",
+    ":triple",
+    ":hold"
+   ],
+   "r": 26
+  }
+ ],
+ "hold_end": "release",
+ "native_multi": true
+}

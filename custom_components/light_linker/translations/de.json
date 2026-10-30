@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Light Linker",
+        "description": "Light Linker fügt ein Seitenpanel hinzu, in dem du Taster und Schalter mit Lampen, Steckdosen und Garagentoren verknüpfst."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Light Linker ist bereits eingerichtet."
+    }
+  },
+  "services": {
+    "trigger": {
+      "name": "Verknüpfung auslösen",
+      "description": "Simuliert ein Tasterereignis für eine Verknüpfung, auch wenn sie deaktiviert ist.",
+      "fields": {
+        "link_id": {
+          "name": "Verknüpfungs-ID",
+          "description": "ID der Verknüpfung (Attribut link_id ihres Schalters)."
+        },
+        "kind": {
+          "name": "Ereignis",
+          "description": "Welches Tasterereignis simuliert wird."
+        }
+      }
+    }
+  },
+  "selector": {
+    "kind": {
+      "options": {
+        "press": "Kurz drücken",
+        "double": "Doppelklick",
+        "triple": "Dreifachklick",
+        "hold_start": "Halten",
+        "hold_end": "Loslassen",
+        "on": "An",
+        "off": "Aus",
+        "toggle": "Umschalten"
+      }
+    }
+  },
+  "issues": {
+    "link_broken": {
+      "title": "Light Linker: Verknüpfung „{name}“ unvollständig",
+      "description": "Diese Quellen oder Ziele gibt es nicht mehr: {missing}. Öffne Light Linker in der Seitenleiste und wähle sie neu oder lösche die Verknüpfung."
+    },
+    "z2m_migration": {
+      "title": "Light Linker: Umstellung auf Zigbee2MQTT möglich",
+      "description": "{count} Quellen oder Ziele deiner Verknüpfungen gibt es jetzt auch in Zigbee2MQTT. Öffne Light Linker in der Seitenleiste und wähle „Umstellen“."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "motion_state": {
+        "name": "Status",
+        "state": {
+          "off": "Aus",
+          "auto": "Automatisch an",
+          "runout": "Nachlauf",
+          "manual": "Manuell an",
+          "blocked": "Gesperrt",
+          "inactive": "Inaktiv"
+        }
+      }
+    }
+  }
+}

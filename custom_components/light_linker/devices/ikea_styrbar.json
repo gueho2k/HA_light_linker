@@ -1,0 +1,66 @@
+{
+ "id": "ikea_styrbar",
+ "name": "IKEA STYRBAR",
+ "match": [
+  "E2001",
+  "E2002",
+  "STYRBAR"
+ ],
+ "frame": {
+  "w": 64,
+  "h": 112,
+  "r": 16
+ },
+ "buttons": [
+  {
+   "id": "I",
+   "label": "I",
+   "x": 0,
+   "y": 0,
+   "w": 64,
+   "h": 38,
+   "slots": [
+    ":on",
+    ":hold_up"
+   ]
+  },
+  {
+   "id": "arrow_left",
+   "label": "‹",
+   "x": 0,
+   "y": 38,
+   "w": 32,
+   "h": 36,
+   "slots": [
+    "arrow_left:press",
+    "arrow_left:hold"
+   ]
+  },
+  {
+   "id": "arrow_right",
+   "label": "›",
+   "x": 32,
+   "y": 38,
+   "w": 32,
+   "h": 36,
+   "slots": [
+    "arrow_right:press",
+    "arrow_right:hold"
+   ]
+  },
+  {
+   "id": "O",
+   "label": "O",
+   "x": 0,
+   "y": 74,
+   "w": 64,
+   "h": 38,
+   "slots": [
+    ":off",
+    ":hold_down"
+   ]
+  }
+ ],
+ "hold_end": "release",
+ "native_multi": false
+}

@@ -1,0 +1,25 @@
+{
+  "domain": "light_linker",
+  "name": "Light Linker",
+  "after_dependencies": [
+    "mqtt",
+    "zha"
+  ],
+  "codeowners": [
+    "@gueho2k"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "http",
+    "frontend",
+    "panel_custom",
+    "websocket_api"
+  ],
+  "documentation": "https://github.com/gueho2k/HA_light_linker",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/gueho2k/HA_light_linker/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.5.5"
+}

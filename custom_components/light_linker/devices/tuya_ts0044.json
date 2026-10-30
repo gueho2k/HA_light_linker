@@ -1,0 +1,71 @@
+{
+ "id": "tuya_ts0044",
+ "name": "Tuya/Moes Szenentaster 4-fach",
+ "match": [
+  "TS0044",
+  "Scene remote with 4 keys",
+  "Wireless switch with 4 buttons",
+  "ZT-B-EU4"
+ ],
+ "frame": {
+  "w": 96,
+  "h": 96,
+  "r": 10
+ },
+ "buttons": [
+  {
+   "id": "1",
+   "label": "1",
+   "x": 0,
+   "y": 0,
+   "w": 48,
+   "h": 48,
+   "slots": [
+    "1:press",
+    "1:double",
+    "1:hold"
+   ]
+  },
+  {
+   "id": "2",
+   "label": "2",
+   "x": 48,
+   "y": 0,
+   "w": 48,
+   "h": 48,
+   "slots": [
+    "2:press",
+    "2:double",
+    "2:hold"
+   ]
+  },
+  {
+   "id": "3",
+   "label": "3",
+   "x": 0,
+   "y": 48,
+   "w": 48,
+   "h": 48,
+   "slots": [
+    "3:press",
+    "3:double",
+    "3:hold"
+   ]
+  },
+  {
+   "id": "4",
+   "label": "4",
+   "x": 48,
+   "y": 48,
+   "w": 48,
+   "h": 48,
+   "slots": [
+    "4:press",
+    "4:double",
+    "4:hold"
+   ]
+  }
+ ],
+ "hold_end": "none",
+ "native_multi": true
+}

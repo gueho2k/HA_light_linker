@@ -1,0 +1,7 @@
+{
+  "services": {
+    "trigger": {
+      "service": "mdi:gesture-tap-button"
+    }
+  }
+}

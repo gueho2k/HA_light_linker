@@ -1,0 +1,21 @@
+trigger:
+  fields:
+    link_id:
+      required: true
+      selector:
+        text:
+    kind:
+      required: false
+      default: press
+      selector:
+        select:
+          translation_key: kind
+          options:
+            - press
+            - double
+            - triple
+            - hold_start
+            - hold_end
+            - "on"
+            - "off"
+            - toggle
