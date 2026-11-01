@@ -97,6 +97,9 @@ const KIND_TEXT = {
   motion_off: "Nachlauf vorbei, aus",
   manual_on: "von Hand an",
   manual_off: "von Hand aus",
+  echo_ignored: "Aktor-Rückmeldung ignoriert",
+  echo_repeat: "Aktor sprang zurück, nochmal geschaltet",
+  flicker: "An-Aus am Aktor ignoriert",
 };
 
 const ORIGIN_TEXT = { test: " (Test)", dashboard: " (Dashboard)", service: " (Aktion)", motion: "" };
@@ -125,6 +128,7 @@ const DEFAULT_OPTIONS = {
     manual_off_delay_s: 600,
     manual_off_block: "until_empty",
     manual_off_block_s: 600,
+    calibrate: true,
     block_entity: null,
     only_off: false,
   },
@@ -1854,6 +1858,7 @@ class LightLinkerPanel extends HTMLElement {
     if (el.dataset.type === "number") value = value === "" ? null : Number(value);
     if (el.dataset.type === "nullable") value = value === "" ? null : value;
     if (el.dataset.type === "minutes") value = value === "" ? null : Math.round(Number(value) * 60);
+    if (el.dataset.type === "duration") value = value === "" ? null : Math.round(Number(value) * Number(el.dataset.unit || 1));
     const keys = path.split(".");
     let obj = base;
     keys.slice(0, -1).forEach((k) => {
@@ -2138,6 +2143,17 @@ class LightLinkerPanel extends HTMLElement {
   }
 
   _onChange(ev) {
+    if (ev.target.dataset.durUnit) {
+      // seconds <-> minutes: the number stays, its meaning changes
+      const path = ev.target.dataset.durUnit;
+      this._durUnits = { ...(this._durUnits || {}), [path]: Number(ev.target.value) };
+      const input = ev.target.parentElement.querySelector(`input[data-bind="${CSS.escape(path)}"]`);
+      if (input) {
+        input.dataset.unit = ev.target.value;
+        this._onInput({ target: input });
+      }
+      return;
+    }
     if (ev.target.dataset.comboInput || ev.target.dataset.cycle) return;
     if (ev.target.dataset.cycleAdd !== undefined) {
       this._cycleList().push({ rgb: fromHex(ev.target.value), name: "" });
@@ -3259,6 +3275,7 @@ class LightLinkerPanel extends HTMLElement {
         return `<div class="item">
           <div class="item-top"><span>${esc(name)}${typeLabel ? ` <small class="tag">${typeLabel}</small>` : ""}${src.button ? ` <small class="tag">Taste ${esc(src.button)}</small>` : ""}</span>
             <button class="x" data-action="remove-source" data-index="${i}" aria-label="Quelle entfernen">×</button></div>
+          ${src.adapter === "occupancy" ? `<p class="hint">${esc(this._sensorText(info?.calibration))}</p>` : ""}
           ${
             src.adapter === "state_input" && d.profile !== "custom"
               ? `<div class="item-opts"><label>Art
@@ -3308,6 +3325,41 @@ class LightLinkerPanel extends HTMLElement {
       ${d.profile === "custom" ? `<p class="hint">Gilt für Belegungen ohne eigenes Ziel.</p>` : ""}`;
   }
 
+  /** What Light Linker has learned about one motion sensor. */
+  _sensorText(c) {
+    if (!c || !c.samples) return "Light Linker lernt diesen Melder noch kennen (noch keine Auslösung beobachtet).";
+    if (c.hold_s == null) return `Light Linker lernt diesen Melder noch kennen (${c.samples} von ${c.needed} Auslösungen).`;
+    const t = (v) => (v >= 90 ? `${Math.round(v / 60 * 10) / 10} min` : `${v} s`);
+    return `Gelernt aus ${c.samples} Auslösungen: meldet „Bewegung“ mindestens ca. ${t(c.hold_s)}${c.gap_s != null ? `, Pausen bei Anwesenheit bis ca. ${t(c.gap_s)}` : ""}.`;
+  }
+
+  /** Effect of the learned sensor behaviour on the run-on (same rule as calibration.py). */
+  _calibHint(d) {
+    const m = d.options.motion;
+    const infos = d.sources.filter((x) => x.adapter === "occupancy").map((x) => this._sourceInfo(x)?.calibration).filter(Boolean);
+    const holds = infos.map((c) => c.hold_s).filter((v) => v != null);
+    if (m.calibrate === false) return `<span class="hint">Zählt ab „keine Bewegung“ des Melders.</span>`;
+    if (!holds.length) return `<span class="hint">Zählt ab der letzten Bewegung, sobald Light Linker die Melder kennt. Bis dahin: ab „keine Bewegung“.</span>`;
+    const hold = Math.max(...holds);
+    const gaps = infos.map((c) => c.gap_s).filter((v) => v != null);
+    const floor = Math.max(5, ...gaps);
+    const wanted = m.off_delay_s || 0;
+    const timer = wanted > 0 ? Math.max(wanted - hold, floor) : 0;
+    const t = (v) => (v >= 90 ? `${Math.round(v / 60 * 10) / 10} min` : `${v} s`);
+    const earliest = hold + timer;
+    const note = earliest > wanted + 2 ? ` Kürzer geht es mit ${infos.length > 1 ? "diesen Meldern" : "diesem Melder"} nicht – er meldet „keine Bewegung“ erst nach ca. ${t(hold)}.` : "";
+    return `<span class="hint">Der Melder hält „Bewegung“ selbst ca. ${t(hold)}. Das Licht geht deshalb ${t(timer)} nach „keine Bewegung“ aus – ca. ${t(earliest)} nach der letzten Bewegung.${note}</span>`;
+  }
+
+  /** Number field with a unit switch s / min; the value is stored in seconds. */
+  _durationField(path, seconds, { empty = "", min = 0 } = {}) {
+    let unit = this._durUnits?.[path];
+    if (!unit) unit = seconds != null && seconds >= 120 && seconds % 60 === 0 ? 60 : 1;
+    const shown = seconds == null ? "" : +(seconds / unit).toFixed(unit === 60 ? 1 : 0);
+    return `<input type="number" min="${min}" step="${unit === 60 ? 1 : 5}" data-type="duration" data-unit="${unit}" data-bind="${esc(path)}" data-rerender value="${esc(shown)}" ${empty ? `placeholder="${esc(empty)}"` : ""}>
+      <select class="unit" data-dur-unit="${esc(path)}" aria-label="Einheit"><option value="1" ${unit === 1 ? "selected" : ""}>s</option><option value="60" ${unit === 60 ? "selected" : ""}>min</option></select>`;
+  }
+
   _renderMotion() {
     const s = this._state;
     const m = this._state.draft.options.motion;
@@ -3317,7 +3369,7 @@ class LightLinkerPanel extends HTMLElement {
       .map((x) => `<option value="${esc(x.entity_id)}" ${x.entity_id === m.lux_entity ? "selected" : ""}>${esc(x.name)}</option>`)
       .join("");
     const luxNow = m.lux_entity ? this._hass.states[m.lux_entity]?.state : null;
-    const minutes = (v) => (v == null ? "" : Math.round(v / 60));
+    const calib = this._calibHint(this._state.draft);
     return `<section class="motion" aria-label="Automatik">
       <h4>Automatik</h4>
       <div class="mgrid">
@@ -3328,16 +3380,16 @@ class LightLinkerPanel extends HTMLElement {
         <label><span class="lbl">Einschalten, wenn dunkler als</span>
           <span class="row"><input type="number" min="0" step="1" data-type="number" data-bind="options.motion.lux_threshold" value="${esc(m.lux_threshold)}"> lx</span></label>
         <label><span class="lbl">Ausschalten ohne Bewegung nach</span>
-          <span class="row"><input type="number" min="0" step="5" data-type="number" data-bind="options.motion.off_delay_s" value="${esc(m.off_delay_s)}"> s</span></label>
+          <span class="row">${this._durationField("options.motion.off_delay_s", m.off_delay_s)}</span>${calib}</label>
         <label><span class="lbl">Von Hand eingeschaltet: aus ohne Bewegung nach</span>
-          <span class="row"><input type="number" min="1" data-type="minutes" data-bind="options.motion.manual_off_delay_s" value="${esc(minutes(m.manual_off_delay_s))}" placeholder="nie"> min</span>
+          <span class="row">${this._durationField("options.motion.manual_off_delay_s", m.manual_off_delay_s, { empty: "nie" })}</span>
           <span class="hint">leer lassen = bleibt an</span></label>
         <label><span class="lbl">Von Hand ausgeschaltet</span>
           <span class="row"><select data-bind="options.motion.manual_off_block" data-rerender>
             <option value="until_empty" ${m.manual_off_block === "until_empty" ? "selected" : ""}>Automatik ruht, bis der Raum leer ist</option>
             <option value="timed" ${m.manual_off_block === "timed" ? "selected" : ""}>Automatik ruht für feste Zeit</option>
           </select>
-          ${m.manual_off_block === "timed" ? `<input type="number" min="1" data-type="minutes" data-bind="options.motion.manual_off_block_s" value="${esc(minutes(m.manual_off_block_s))}"> min` : ""}</span></label>
+          ${m.manual_off_block === "timed" ? this._durationField("options.motion.manual_off_block_s", m.manual_off_block_s) : ""}</span></label>
         <label><span class="lbl">Pausieren, solange eingeschaltet ist</span>
           <span class="row"><input list="block-entities" data-type="nullable" data-bind="options.motion.block_entity" value="${esc(m.block_entity || "")}" placeholder="z. B. input_boolean.film"></span>
           <datalist id="block-entities">${Object.keys(this._hass.states)
@@ -3346,6 +3398,7 @@ class LightLinkerPanel extends HTMLElement {
             .join("")}</datalist></label>
       </div>
       <label class="inline"><input type="checkbox" data-bind="options.motion.only_off" ${m.only_off ? "checked" : ""}> Nur ausschalten, nie automatisch einschalten</label>
+      <label class="inline"><input type="checkbox" data-bind="options.motion.calibrate" data-rerender ${m.calibrate !== false ? "checked" : ""}> Nachlauf an das Verhalten der Melder anpassen (lernt, wie lange sie „Bewegung“ selbst halten)</label>
     </section>`;
   }
 
@@ -3568,6 +3621,8 @@ const STYLES = `
   .belong { border-top: 1px solid var(--ll-line); padding-top: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 20px; }
   .belong .hint { grid-column: 1 / -1; margin: 0; }
   .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .row select.unit { width: auto; flex: none; }
+  .row input[data-type="duration"] { width: 90px; flex: none; }
   .row select { flex: 1; min-width: 0; }
   .row input[type=number] { width: 84px; }
   .ramp-preview { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--secondary-text-color); }
@@ -3739,7 +3794,7 @@ const STYLES = `
 // An open Home Assistant tab may still hold an older version of this panel
 // (HA was restarted after an update without reloading the page). A custom
 // element cannot be defined twice, so reload the page once to get the new one.
-const LL_VERSION = "0.5.5";
+const LL_VERSION = "0.6.0";
 const existing = customElements.get("light-linker-panel");
 if (!existing) {
   LightLinkerPanel.version = LL_VERSION;

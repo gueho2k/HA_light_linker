@@ -28,6 +28,9 @@ _KIND_TEXT = {
     "motion_off": "Nachlauf vorbei, Licht aus",
     "manual_on": "von Hand eingeschaltet, Automatik wartet",
     "manual_off": "von Hand ausgeschaltet",
+    "echo_ignored": "Aktor meldete kurz einen anderen Zustand, ignoriert",
+    "echo_repeat": "Aktor sprang nach dem Schalten zurück, erneut geschaltet",
+    "flicker": "kurzes An-Aus am Aktor ohne Wirkung, ignoriert",
 }
 
 _ACTION_TEXT = {

@@ -53,6 +53,7 @@ from .const import (
     SlotEvent,
     ToggleMode,
 )
+from .calibration import STATS_SAVE_S, SensorCalibration
 from .devices import DeviceLibrary
 from .models import GROUP_SCHEMA, Link, NormalizedEvent, Source
 from .motion import MotionController
@@ -99,6 +100,9 @@ class Engine:
         self._multi_native: dict[str, bool] = {}
         self._observers: dict[str, set[Callable[[dict[str, Any]], None]]] = {}
         self.library = DeviceLibrary(hass)
+        self._stats_handle: asyncio.TimerHandle | None = None
+        self.calibration = SensorCalibration(hass, store.sensor_stats, self._save_stats)
+        store.stats_provider = self.calibration.as_data
         # Last commanded state per link and target set: (on, valid_until).
         # Devices report their new state with a delay; a second press inside
         # that window must toggle back instead of repeating the first command.
@@ -173,6 +177,9 @@ class Engine:
         for ctrl in self._motion.values():
             ctrl.async_stop()
         self._motion.clear()
+        if self._stats_handle is not None:
+            self._stats_handle.cancel()
+            self._stats_handle = None
         self.z2m.async_stop()
         self._started = False
 
@@ -222,6 +229,19 @@ class Engine:
         if ctrl := self._motion.get(link_id):
             return ctrl.as_dict()
         return {"state": str(MotionState.INACTIVE), "timer_end": None, "occupied": None, "dark": None}
+
+    @callback
+    def _save_stats(self) -> None:
+        # learned values are not urgent: one save every five minutes at most
+        if self._stats_handle is not None:
+            return
+
+        @callback
+        def _save() -> None:
+            self._stats_handle = None
+            self.store.async_schedule_save()
+
+        self._stats_handle = self.hass.loop.call_later(STATS_SAVE_S, _save)
 
     @callback
     def async_occupancy_changed(self, entity_id: str) -> None:

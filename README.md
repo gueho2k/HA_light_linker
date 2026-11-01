@@ -1,6 +1,12 @@
 # Light Linker
 
-Verknüpft Taster und Schalter mit Lampen, Steckdosen und Garagentoren, dazu Bewegungs- und Präsenzmelder – ohne Automationen oder Node-RED-Flows. Version 0.5.5.
+Verknüpft Taster und Schalter mit Lampen, Steckdosen und Garagentoren, dazu Bewegungs- und Präsenzmelder – ohne Automationen oder Node-RED-Flows. Version 0.6.0.
+
+## Neu in 0.6.0
+
+- **Aktoren mit unsauberer Rückmeldung (z. B. Sonoff ZBMINI):** Bewegungs-Verknüpfungen werten eine Zustandsänderung, die nicht von ihnen kommt, erst aus, wenn sie 2 s stabil ist. Kurzes An-Aus (Relais-Prellen, Taster am Aktor im Wechselschalter-Modus) wird ignoriert. Springt der Aktor direkt nach dem automatischen Schalten zurück, schaltet Light Linker einmal nach, statt das als „von Hand“ zu werten. Beides steht im Logbuch.
+- **Zeiten in Sekunden oder Minuten:** „Ausschalten ohne Bewegung nach“, „Von Hand eingeschaltet: aus ohne Bewegung nach“ und „Automatik ruht für feste Zeit“ haben eine Einheit s / min – z. B. 30 s.
+- **Melder kalibrieren sich selbst:** Light Linker lernt, wie lange jeder Bewegungsmelder „Bewegung“ selbst hält (Hue wenige Sekunden, IKEA/Lidl oft 1–3 min) und wie lang seine Pausen bei Anwesenheit sind. Der Nachlauf zählt damit ab der letzten Bewegung; beim Melder steht, was gelernt wurde (ab 5 Auslösungen). Abschaltbar pro Verknüpfung.
 
 ## Neu in 0.5.5
 

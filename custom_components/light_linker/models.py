@@ -105,6 +105,8 @@ MOTION_SCHEMA = vol.Schema(
         vol.Optional("block_entity", default=None): vol.Any(None, cv.entity_id),
         # Only switch off automatically, never on
         vol.Optional("only_off", default=False): bool,
+        # Shorten the run-on by what the sensor itself holds "motion" (learned)
+        vol.Optional("calibrate", default=True): bool,
     }
 )
 SOURCE_SCHEMA = vol.All(_SOURCE_BASE, _source_identity)

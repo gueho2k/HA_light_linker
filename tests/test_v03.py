@@ -61,6 +61,12 @@ def kitchen(**motion):
     }
 
 
+@pytest.fixture(autouse=True)
+def no_echo_window(monkeypatch):
+    """A hand right after an automatic switching would count as relay echo."""
+    monkeypatch.setattr("custom_components.light_linker.motion.ECHO_S", -1)
+
+
 @pytest.fixture
 async def room(hass: HomeAssistant, setup_ll):
     hass.states.async_set(PIR, "off", {"device_class": "occupancy"})
@@ -132,6 +138,8 @@ async def test_hand_off_blocks_until_empty(hass, room, hass_ws_client) -> None:
 
     by_hand(hass, LAMP, "off")  # wall switch on the Sonoff
     await hass.async_block_till_done()
+    later(hass, 3)  # judged once settled
+    await hass.async_block_till_done()
     assert (await status(hass_ws_client, hass))["state"] == "blocked"
 
     hass.states.async_set(PIR, "off", {"device_class": "occupancy"})
@@ -155,6 +163,8 @@ async def test_hand_on_goes_off_after_manual_delay(hass, room, hass_ws_client) -
     calls = room
     await create(hass_ws_client, hass, kitchen())
     by_hand(hass, LAMP, "on")
+    await hass.async_block_till_done()
+    later(hass, 3)
     await hass.async_block_till_done()
     assert (await status(hass_ws_client, hass))["state"] == "manual"
     later(hass, 60)
