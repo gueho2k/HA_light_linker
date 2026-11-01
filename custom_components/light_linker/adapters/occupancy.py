@@ -37,5 +37,6 @@ class OccupancyAdapter(StateTrackingAdapter):
                 raw_type=new_state.attributes.get("device_class", "motion"),
                 kind=EventKind.ON,
             )
+        self._engine.calibration.observe(old_state, new_state)
         # Every change (incl. unavailable) can change the combined occupancy.
         self._engine.async_occupancy_changed(new_state.entity_id)

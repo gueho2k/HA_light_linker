@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import deque
 from datetime import datetime, timedelta
 import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -22,6 +23,14 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 _SWITCHED = (STATE_ON, STATE_OFF)
+
+# A change nobody here commanded is judged only after it has settled: relays
+# like the Sonoff ZBMINI sometimes report on-off-on within a fraction of a
+# second, or a wall push-button on a relay in toggle mode flips twice.
+SETTLE_S = 2.0
+# A report of the opposite state that arrives this soon after an own command is
+# taken as the device not following (it is switched again once), not as a hand.
+ECHO_S = 3.0
 
 
 class MotionController:
@@ -45,6 +54,12 @@ class MotionController:
         self._own: deque[str] = deque(maxlen=32)
         self._unsub_targets: CALLBACK_TYPE | None = None
         self._targets: list[str] = []
+        # last own command: (on, monotonic time, already repeated)
+        self._commanded: tuple[bool, float, bool] | None = None
+        # foreign change being settled: (any target on before it, right after
+        # an own command, timer)
+        self._settle: tuple[bool, bool, CALLBACK_TYPE] | None = None
+        self.last_glitch: str | None = None
 
     # ---------------------------------------------------------------- props
 
@@ -106,6 +121,7 @@ class MotionController:
     def async_stop(self) -> None:
         """Stop following, cancel timers."""
         self._cancel_timer()
+        self._cancel_settle()
         if self._unsub_targets:
             self._unsub_targets()
             self._unsub_targets = None
@@ -136,7 +152,7 @@ class MotionController:
             return
         # everybody left
         if state == MotionState.AUTO:
-            self._start_timer(self.opts["off_delay_s"], self._auto_off)
+            self._start_timer(self.runout(self.opts["off_delay_s"]), self._auto_off)
             self._set_state(MotionState.RUNOUT)
         elif state == MotionState.MANUAL:
             if (delay := self._manual_delay()) is not None:
@@ -147,8 +163,19 @@ class MotionController:
     def _manual_delay(self) -> int | None:
         # "only off": light switched on by hand goes off like an automatic one
         if self.opts["only_off"]:
-            return self.opts["off_delay_s"]
-        return self.opts["manual_off_delay_s"]
+            return self.runout(self.opts["off_delay_s"])
+        wanted = self.opts["manual_off_delay_s"]
+        return None if wanted is None else self.runout(wanted)
+
+    def runout(self, wanted_s: int) -> int:
+        """Timer after "no motion" for a run-on counted from the last motion."""
+        if not self.opts.get("calibrate", True):
+            return wanted_s
+        return self.engine.calibration.runout(self.sensors, wanted_s)[0]
+
+    def calibration(self) -> dict[str, Any]:
+        """What the sensors taught us, for the panel."""
+        return self.engine.calibration.runout(self.sensors, self.opts["off_delay_s"])[1]
 
     @callback
     def _target_changed(self, event: Event[EventStateChangedData]) -> None:
@@ -158,19 +185,63 @@ class MotionController:
         if old.state not in _SWITCHED or new.state not in _SWITCHED:
             return  # (un)availability, restarts
         ctx = new.context
-        if ctx.id in self._own or (ctx.parent_id and ctx.parent_id in self._own):
+        own = ctx.id in self._own or (ctx.parent_id is not None and ctx.parent_id in self._own)
+        commanded = self._commanded
+        if own and (commanded is None or (new.state == STATE_ON) == commanded[0]):
+            return  # our command arrived (or a late report of an older one)
+        # Anything else is judged after it has settled. The state before the
+        # first change of a burst is what counts.
+        if self._settle is None:
+            before = old.state == STATE_ON or any(
+                (st := self.hass.states.get(e)) is not None and st.state == STATE_ON
+                for e in self._targets
+                if e != new.entity_id
+            )
+            echo = commanded is not None and time.monotonic() - commanded[1] <= ECHO_S
+        else:
+            before, echo, unsub = self._settle
+            unsub()
+        unsub = async_call_later(self.hass, SETTLE_S, HassJob(self._settled, cancel_on_shutdown=True))
+        self._settle = (before, echo, unsub)
+
+    @callback
+    def _settled(self, _now: datetime) -> None:
+        before, echo, _unsub = self._settle or (None, False, None)
+        self._settle = None
+        now_on = self._any_target_on()
+        commanded = self._commanded
+        if echo and commanded is not None:
+            want_on, _at, repeated = commanded
+            if now_on == want_on:
+                self._glitch("echo_ignored", "Aktor meldete kurz einen anderen Zustand – ignoriert")
+                return
+            if not repeated:
+                # the relay jumped back right after our command: switch once more
+                self._glitch("echo_repeat", "Aktor sprang nach dem Schalten zurück – erneut geschaltet")
+                self._commanded = (want_on, time.monotonic(), True)
+                self._send(want_on)
+                return
+        if before is not None and now_on == before:
+            self._glitch("flicker", "kurzes An-Aus ohne Wirkung – ignoriert")
             return
+        self._hand(now_on)
+
+    def _glitch(self, kind: str, text: str) -> None:
+        _LOGGER.debug("%s: %s", self.link.name, text)
+        self.last_glitch = f"{dt_util.now().strftime('%H:%M')} {text}"
+        self.engine.async_record_motion(self.link, kind)
+        self._notify()
+
+    def _hand(self, now_on: bool) -> None:
+        """Somebody switched the targets (wall switch, app, voice, other link)."""
+        self._commanded = None
         self._cancel_timer()
-        if new.state == STATE_ON:
-            # switched on by hand
+        if now_on:
             self._set_state(MotionState.MANUAL)
             if not self.occupied and (delay := self._manual_delay()) is not None:
                 self._start_timer(delay, self._manual_off)
             self.engine.async_record_motion(self.link, "manual_on")
             return
-        if self._any_target_on():
-            return  # one of several lamps off: still manual
-        # all off by hand
         self.engine.async_record_motion(self.link, "manual_off")
         if self.opts["manual_off_block"] == "timed":
             self._set_state(MotionState.BLOCKED)
@@ -179,6 +250,11 @@ class MotionController:
             self._set_state(MotionState.BLOCKED)
         else:
             self._set_state(MotionState.OFF)
+
+    def _cancel_settle(self) -> None:
+        if self._settle is not None:
+            self._settle[2]()
+            self._settle = None
 
     # --------------------------------------------------------------- timers
 
@@ -224,10 +300,16 @@ class MotionController:
 
     @callback
     def _switch(self, on: bool, new_state: MotionState, record: str) -> None:
-        context = Context()
-        self._own.append(context.id)
+        self._cancel_settle()
+        self._commanded = (on, time.monotonic(), False)
         self._set_state(new_state)
         self.engine.async_record_motion(self.link, record)
+        self._send(on)
+
+    @callback
+    def _send(self, on: bool) -> None:
+        context = Context()
+        self._own.append(context.id)
         lights = [e for e in self._targets if e.startswith("light.")]
         switches = [e for e in self._targets if e.startswith("switch.")]
         self.engine.entry.async_create_task(
@@ -252,4 +334,6 @@ class MotionController:
             "timer_end": self.timer_end.isoformat() if self.timer_end else None,
             "occupied": self.occupied,
             "dark": self._dark(),
+            "calibration": self.calibration(),
+            "last_glitch": self.last_glitch,
         }

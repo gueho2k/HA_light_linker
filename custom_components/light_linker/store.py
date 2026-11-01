@@ -53,6 +53,10 @@ class LinkStore:
         self.groups: dict[str, dict[str, Any]] = {}
         # source key -> readable name given in the panel
         self.aliases: dict[str, str] = {}
+        # motion sensor -> learned on-periods and pauses (calibration.py)
+        self.sensor_stats: dict[str, Any] = {}
+        # set by the engine: returns the current calibration data for saving
+        self.stats_provider: Any = None
 
     async def async_load(self) -> None:
         """Load links from disk, skipping entries that no longer validate."""
@@ -72,6 +76,7 @@ class LinkStore:
         self.external = dict(data.get("external", {}))
         self.seen_buttons = {k: list(v) for k, v in data.get("seen_buttons", {}).items()}
         self.aliases = dict(data.get("aliases", {}))
+        self.sensor_stats = dict(data.get("sensor_stats", {}))
         self.groups = {g["id"]: g for g in data.get("groups", []) if isinstance(g, dict) and g.get("id")}
 
     def async_schedule_save(self) -> None:
@@ -90,4 +95,5 @@ class LinkStore:
             "seen_buttons": self.seen_buttons,
             "groups": list(self.groups.values()),
             "aliases": self.aliases,
+            "sensor_stats": self.stats_provider() if self.stats_provider else self.sensor_stats,
         }

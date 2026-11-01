@@ -398,6 +398,7 @@ def _occupancy_sources(
     hass: HomeAssistant, ent_reg: er.EntityRegistry, dev_reg: dr.DeviceRegistry
 ) -> list[dict[str, Any]]:
     """Motion, occupancy and presence sensors with the light sensor of the same device."""
+    engine = hass.data.get(DATA_ENGINE)
     result = []
     for state in hass.states.async_all("binary_sensor"):
         device_class = state.attributes.get("device_class")
@@ -421,6 +422,7 @@ def _occupancy_sources(
                 "device_class": device_class,
                 "default_off_delay_s": DEFAULT_OFF_DELAY_S.get(device_class, 30),
                 "lux_entity": lux,
+                "calibration": engine.calibration.info(state.entity_id) if engine else None,
                 "event_types": [],
                 "buttons": [],
                 "has_release": False,
