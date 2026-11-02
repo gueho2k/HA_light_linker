@@ -3330,7 +3330,7 @@ class LightLinkerPanel extends HTMLElement {
     if (!c || !c.samples) return "Light Linker lernt diesen Melder noch kennen (noch keine Auslösung beobachtet).";
     if (c.hold_s == null) return `Light Linker lernt diesen Melder noch kennen (${c.samples} von ${c.needed} Auslösungen).`;
     const t = (v) => (v >= 90 ? `${Math.round(v / 60 * 10) / 10} min` : `${v} s`);
-    return `Gelernt aus ${c.samples} Auslösungen: meldet „Bewegung“ mindestens ca. ${t(c.hold_s)}${c.gap_s != null ? `, Pausen bei Anwesenheit bis ca. ${t(c.gap_s)}` : ""}.`;
+    return `Gelernt aus ${c.samples} Auslösungen: meldet „keine Bewegung“ ca. ${t(c.hold_s)} nach der letzten Bewegung.`;
   }
 
   /** Effect of the learned sensor behaviour on the run-on (same rule as calibration.py). */
@@ -3341,10 +3341,8 @@ class LightLinkerPanel extends HTMLElement {
     if (m.calibrate === false) return `<span class="hint">Zählt ab „keine Bewegung“ des Melders.</span>`;
     if (!holds.length) return `<span class="hint">Zählt ab der letzten Bewegung, sobald Light Linker die Melder kennt. Bis dahin: ab „keine Bewegung“.</span>`;
     const hold = Math.max(...holds);
-    const gaps = infos.map((c) => c.gap_s).filter((v) => v != null);
-    const floor = Math.max(5, ...gaps);
     const wanted = m.off_delay_s || 0;
-    const timer = wanted > 0 ? Math.max(wanted - hold, floor) : 0;
+    const timer = wanted > 0 ? Math.max(wanted - hold, 5) : 0;
     const t = (v) => (v >= 90 ? `${Math.round(v / 60 * 10) / 10} min` : `${v} s`);
     const earliest = hold + timer;
     const note = earliest > wanted + 2 ? ` Kürzer geht es mit ${infos.length > 1 ? "diesen Meldern" : "diesem Melder"} nicht – er meldet „keine Bewegung“ erst nach ca. ${t(hold)}.` : "";
@@ -3794,7 +3792,7 @@ const STYLES = `
 // An open Home Assistant tab may still hold an older version of this panel
 // (HA was restarted after an update without reloading the page). A custom
 // element cannot be defined twice, so reload the page once to get the new one.
-const LL_VERSION = "0.6.0";
+const LL_VERSION = "0.6.1";
 const existing = customElements.get("light-linker-panel");
 if (!existing) {
   LightLinkerPanel.version = LL_VERSION;

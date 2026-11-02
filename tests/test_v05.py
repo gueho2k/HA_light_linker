@@ -110,7 +110,7 @@ def test_calibration_hue_vs_ikea(hass, monkeypatch) -> None:
     _feed(cal, monkeypatch, "binary_sensor.ikea", [(180, 5), (200, 4), (185, 6), (240, 3), (181, 5)])
     hue = cal.info("binary_sensor.hue")
     ikea = cal.info("binary_sensor.ikea")
-    assert 9 <= hue["hold_s"] <= 12 and 15 <= hue["gap_s"] <= 25
+    assert 9 <= hue["hold_s"] <= 12
     assert 175 <= ikea["hold_s"] <= 190
     timer, info = cal.runout(["binary_sensor.hue"], 60)
     assert info["calibrated"] and 45 <= timer <= 52
@@ -140,3 +140,19 @@ async def test_calibrated_runout_used_by_motion_link(hass, room, hass_ws_client,
     later(hass, 10)
     await hass.async_block_till_done()
     assert [c.service for c in calls] == ["turn_on", "turn_off"]
+
+
+def test_long_pauses_do_not_stretch_runout(hass, monkeypatch) -> None:
+    """Real Hue SML003 kitchen data: people leave and come back after minutes.
+
+    Those pauses must not lengthen the run-on; only the sensor's own hold counts.
+    """
+    cal = SensorCalibration(hass, {}, lambda: None)
+    on = [101, 27, 32, 26, 46, 35, 8, 8.5, 39, 49, 290, 15, 33, 417, 21, 20, 163, 54, 306, 20, 22, 25, 22, 21, 27, 10, 10, 31, 42, 10]
+    gap = [9, 2, 14, 21, 554, 2, 2, 4, 21, 23, 233, 586, 424, 3, 7, 39, 46, 4, 90, 104, 98, 575, 185, 174, 206, 128, 51, 174, 181, 117]
+    _feed(cal, monkeypatch, "binary_sensor.h_eg_k_bewegungsmelder", list(zip(on, gap)))
+    info = cal.info("binary_sensor.h_eg_k_bewegungsmelder")
+    assert 15 <= info["hold_s"] <= 22
+    timer, detail = cal.runout(["binary_sensor.h_eg_k_bewegungsmelder"], 30)
+    assert 8 <= timer <= 15
+    assert detail["earliest_s"] == 30 or detail["earliest_s"] <= 35

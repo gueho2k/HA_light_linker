@@ -7,14 +7,13 @@ sensor it uses and learns two figures:
 
 hold_s   How long the sensor keeps "motion" at least (its built-in run-on).
          Taken as the lower quartile of the measured on-periods.
-gap_s    How long it shows "no motion" while somebody is still there (the
-         short pauses between two detections). Taken as the 80th percentile
-         of pauses shorter than GAP_LIMIT_S.
+gap_s    Pauses between two detections (kept for information only: a sensor
+         cannot tell a short pause of somebody sitting still from somebody
+         leaving and coming back, so pauses must not stretch the run-on).
 
 The run-on of a motion link ("off without motion after X") counts from the last
 motion. The sensor itself already waited hold_s, so the timer after "no motion"
-is X - hold_s, but never shorter than gap_s (otherwise the light would go off in
-the normal pauses of a sensor that is blind for a while).
+is X - hold_s, at least MIN_RUNOUT_S.
 """
 
 from __future__ import annotations
@@ -97,22 +96,19 @@ class SensorCalibration:
         """Timer after "no motion" for a wanted run-on counted from the last motion.
 
         With several sensors the room is empty only when all are clear, so the
-        sensor with the longest hold counts, the longest gap sets the floor.
+        sensor with the longest hold counts.
         """
         infos = [self.info(e) for e in sensors]
         holds = [i["hold_s"] for i in infos if i["hold_s"] is not None]
-        gaps = [i["gap_s"] for i in infos if i["gap_s"] is not None]
         if not holds:
             return wanted_s, {"calibrated": False}
         hold = max(holds)
-        floor = max([MIN_RUNOUT_S, *gaps])
-        timer = max(wanted_s - hold, floor) if wanted_s > 0 else 0
+        timer = max(wanted_s - hold, MIN_RUNOUT_S) if wanted_s > 0 else 0
         return int(timer), {
             "calibrated": True,
             "hold_s": hold,
-            "gap_s": max(gaps) if gaps else None,
             "timer_s": int(timer),
-            "earliest_s": int(hold + (floor if wanted_s > 0 else 0)),
+            "earliest_s": int(hold + timer),
         }
 
     def as_data(self) -> dict[str, Any]:
