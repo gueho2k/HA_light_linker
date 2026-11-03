@@ -13,6 +13,7 @@ from ..const import MAX_EVENT_AGE_S, Adapter
 from ..models import NormalizedEvent
 from .base import StateTrackingAdapter
 from .device_maps import has_release, normalize
+from .grouping import key_group
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +25,15 @@ class EventEntityAdapter(StateTrackingAdapter):
 
     def _learnable(self, entity_id: str, event_data: EventStateChangedData) -> bool:
         return entity_id.startswith("event.")
+
+    @callback
+    def async_set_watched(self, entity_ids) -> None:
+        """Follow the sources and, for a multi-key Matter remote, all of its keys."""
+        ids = set(entity_ids)
+        for entity_id in list(ids):
+            if group := key_group(self._hass, entity_id):
+                ids.update(group[2])
+        super().async_set_watched(ids)
 
     @callback
     def _handle(self, event: Event[EventStateChangedData]) -> None:
@@ -48,10 +58,14 @@ class EventEntityAdapter(StateTrackingAdapter):
             return
         event_types = attrs.get("event_types") or ()
         button, kind, direction = normalize(str(raw_type), attrs.get("button"), event_types)
+        entity_id = new_state.entity_id
+        if button is None and (group := key_group(self._hass, entity_id)):
+            # Matter remote: one entity per key, shown as one remote
+            entity_id, button = group[0], group[1]
 
         self._engine.async_learn_candidate(
             adapter=self.adapter,
-            ident=new_state.entity_id,
+            ident=entity_id,
             button=button,
             raw_type=str(raw_type),
             kind=kind,
@@ -61,8 +75,8 @@ class EventEntityAdapter(StateTrackingAdapter):
         _LOGGER.debug("%s %s -> %s %s", new_state.entity_id, raw_type, button, kind)
         self._engine.async_handle_event(
             NormalizedEvent(
-                source_key=f"{self.adapter}:{new_state.entity_id}",
-                entity_id=new_state.entity_id,
+                source_key=f"{self.adapter}:{entity_id}",
+                entity_id=entity_id,
                 button=button,
                 kind=kind,
                 direction=direction,

@@ -2,6 +2,11 @@
 
 Verknüpft Taster und Schalter mit Lampen, Steckdosen und Garagentoren, dazu Bewegungs- und Präsenzmelder – ohne Automationen oder Node-RED-Flows. Version 0.6.1.
 
+## Neu in 0.6.3
+
+- **Matter-Taster mit mehreren Tasten (IKEA BILRESA).** Jede Taste meldet sich in Home Assistant als eigene Entität („Taste (1)“, „Taste (2)“). Light Linker fasst sie jetzt zu einem Taster mit Tasten 1 und 2 zusammen, mit Bild aus der Geräte-Bibliothek.
+- **Einfaches Drücken von Matter-Tastern wird erkannt** (`multi_press_1`), bisher wurden nur Doppelklick und Halten verstanden.
+
 ## Neu in 0.6.2
 
 - **Lampen gehen nicht mehr mit 1 % an.** Schaltet man eine ZHA-Lampe aus, während sie noch hochfährt (schnelles Ein-Aus), merkt sie sich die Zwischenhelligkeit (1 %) und geht beim nächsten Einschalten nur so hell an. Light Linker erkennt das (`off_brightness`) und schaltet solche Lampen mit der Einschalthelligkeit des Links ein, sonst mit 100 %. Einstellbar unter „Nicht dunkler einschalten als … %“ (Standard 5, 0 = aus).

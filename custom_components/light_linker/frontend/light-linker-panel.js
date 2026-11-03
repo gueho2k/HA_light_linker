@@ -3794,7 +3794,7 @@ const STYLES = `
 // An open Home Assistant tab may still hold an older version of this panel
 // (HA was restarted after an update without reloading the page). A custom
 // element cannot be defined twice, so reload the page once to get the new one.
-const LL_VERSION = "0.6.2";
+const LL_VERSION = "0.6.3";
 const existing = customElements.get("light-linker-panel");
 if (!existing) {
   LightLinkerPanel.version = LL_VERSION;

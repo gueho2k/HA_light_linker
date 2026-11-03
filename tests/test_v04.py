@@ -682,3 +682,42 @@ async def test_stale_dim_memory_is_not_restored(hass, setup_ll, hass_ws_client, 
         by_entity[tuple(ids)] = c.data
     assert by_entity[("light.sofa1",)]["brightness_pct"] == 100
     assert "brightness_pct" not in by_entity[("light.sofa2",)]
+
+
+async def test_matter_remote_two_keys(hass, setup_ll, hass_ws_client, no_debounce) -> None:
+    """IKEA BILRESA (Matter): two event entities are one remote with keys 1 and 2."""
+    matter = MockConfigEntry(domain="matter", data={})
+    matter.add_to_hass(hass)
+    dev = dr.async_get(hass).async_get_or_create(
+        config_entry_id=matter.entry_id, identifiers={("matter", "bilresa")},
+        manufacturer="IKEA of Sweden", model="BILRESA dual button",
+    )
+    ent_reg = er.async_get(hass)
+    types = ["multi_press_1", "multi_press_2", "long_press", "long_release"]
+    ids = []
+    for n in (1, 2):
+        entry = ent_reg.async_get_or_create(
+            "event", "matter", f"bilresa-{n}", device_id=dev.id, config_entry=matter,
+            suggested_object_id=f"bilresa_taste_{n}", original_name=f"Taste ({n})",
+        )
+        ids.append(entry.entity_id)
+        hass.states.async_set(entry.entity_id, "unknown", {"event_types": types})
+    hass.states.async_set("light.a", "off")
+    hass.states.async_set("light.b", "off")
+    calls = async_mock_service(hass, "light", "turn_on")
+    _, msg = await ws(hass_ws_client, hass, {"type": "light_linker/sources/list"})
+    matter_sources = [s for s in msg["result"]["sources"] if s["entity_id"] in ids]
+    assert [s["entity_id"] for s in matter_sources] == [ids[0]]
+    assert matter_sources[0]["buttons"] == ["1", "2"]
+    assert matter_sources[0]["layout"]["library"] == "ikea_bilresa"
+    for button, lamp in (("1", "light.a"), ("2", "light.b")):
+        await create(hass_ws_client, hass, {
+            "name": f"Taste {button}", "profile": "toggle", "sources": [src(ids[0], button)],
+            "targets": {"entity_id": [lamp], "area_id": []},
+        })
+    fire(hass, ids[1], "multi_press_1", types)
+    await hass.async_block_till_done()
+    assert [c.data["entity_id"] for c in calls] == [["light.b"]] or [c.data["entity_id"] for c in calls] == ["light.b"]
+    fire(hass, ids[0], "multi_press_1", types)
+    await hass.async_block_till_done()
+    assert len(calls) == 2

@@ -13,6 +13,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
 from .adapters.device_maps import buttons_from_event_types, has_release
+from .adapters.grouping import key_group
 from .const import (
     DEFAULT_OFF_DELAY_S,
     ActionType,
@@ -354,11 +355,23 @@ def ws_sources_list(hass: HomeAssistant, connection: websocket_api.ActiveConnect
         buttons = buttons_from_event_types(event_types)
         if (btn := state.attributes.get("button")) not in (None, "") and str(btn) not in buttons:
             buttons.append(str(btn))
+        group = None if buttons else key_group(hass, state.entity_id)
+        if group:
+            if group[0] != state.entity_id:
+                continue  # the other keys of this remote are part of its first entity
+            for sibling in group[2]:
+                other = hass.states.get(sibling)
+                key = key_group(hass, sibling)
+                if other is not None and key and key[1] not in buttons:
+                    buttons.append(key[1])
+                    event_types.extend(
+                        t for t in (other.attributes.get("event_types") or []) if t not in event_types
+                    )
         sources.append(
             {
                 "adapter": "event_entity",
                 "entity_id": state.entity_id,
-                "name": state.name,
+                "name": ((device.name_by_user or device.name) if device and group else state.name),
                 "device": (device.name_by_user or device.name) if device else None,
                 "_device": device,
                 "area_id": _area_of(entry, dev_reg),
