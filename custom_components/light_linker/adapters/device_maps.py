@@ -46,6 +46,7 @@ _KIND_MAP: dict[str, tuple[EventKind | None, str | None]] = {
     "long_press": (EventKind.HOLD_START, None),
     "long_release": (EventKind.HOLD_END, None),
     "repeat": (EventKind.HOLD_REPEAT, None),
+    "multi_press_1": (EventKind.PRESS, None),
     "multi_press_2": (EventKind.DOUBLE, None),
     "multi_press_3": (EventKind.TRIPLE, None),
     "initial_press": (None, None),

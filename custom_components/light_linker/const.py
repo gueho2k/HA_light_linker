@@ -6,7 +6,7 @@ from enum import StrEnum
 from typing import Final
 
 DOMAIN: Final = "light_linker"
-VERSION: Final = "0.6.2"
+VERSION: Final = "0.6.3"
 
 STORAGE_KEY: Final = "light_linker.links"
 STORAGE_VERSION: Final = 1
