@@ -121,6 +121,9 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional("on_color_temp_kelvin", default=None): vol.Any(
             None, vol.All(vol.Coerce(int), vol.Range(1000, 10000))
         ),
+        # A lamp that would come on dimmer than this (a stale 1 % memory) is set to
+        # on_brightness_pct (or 100 %) instead. 0 = off.
+        vol.Optional("min_on_pct", default=5): vol.All(vol.Coerce(int), vol.Range(0, 50)),
         vol.Optional("transition", default=0.4): vol.All(vol.Coerce(float), vol.Range(0, 10)),
         vol.Optional("toggle_mode", default=ToggleMode.ANY_ON): vol.Coerce(ToggleMode),
         vol.Optional("dim_step_pct", default=10): vol.All(vol.Coerce(int), vol.Range(1, 50)),
