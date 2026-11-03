@@ -108,6 +108,7 @@ const DOMAIN_LABEL = { light: "Lampe", switch: "Steckdose/Schalter", cover: "Tor
 
 const DEFAULT_OPTIONS = {
   on_brightness_pct: null,
+  min_on_pct: 5,
   on_color_temp_kelvin: null,
   transition: 0.4,
   toggle_mode: "any_on",
@@ -3412,6 +3413,7 @@ class LightLinkerPanel extends HTMLElement {
             <option value="all_on" ${o.toggle_mode === "all_on" ? "selected" : ""}>nur wenn alle an → aus</option>
           </select></label>
         <label>Einschalthelligkeit ${num("on_brightness_pct", o.on_brightness_pct, 'min="1" max="100" placeholder="zuletzt"')} %</label>
+        <label title="Lampen, die sich auf fast unsichtbare Helligkeit zurückgesetzt haben (z. B. 1 %), schalten mit der Einschalthelligkeit (sonst 100 %) ein. 0 = aus.">Nicht dunkler einschalten als ${num("min_on_pct", o.min_on_pct, 'min="0" max="50"')} %</label>
         <label>Farbtemperatur ${num("on_color_temp_kelvin", o.on_color_temp_kelvin, 'min="1000" max="10000" step="100" placeholder="unverändert"')} K</label>
         <label>Übergang ${num("transition", o.transition, 'min="0" max="10" step="0.1"')} s</label>
         <label class="inline"><input type="checkbox" data-bind="options.verify.enabled" ${o.verify.enabled ? "checked" : ""}>
@@ -3792,7 +3794,7 @@ const STYLES = `
 // An open Home Assistant tab may still hold an older version of this panel
 // (HA was restarted after an update without reloading the page). A custom
 // element cannot be defined twice, so reload the page once to get the new one.
-const LL_VERSION = "0.6.1";
+const LL_VERSION = "0.6.2";
 const existing = customElements.get("light-linker-panel");
 if (!existing) {
   LightLinkerPanel.version = LL_VERSION;

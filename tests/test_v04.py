@@ -661,3 +661,24 @@ async def test_free_binding_can_drive_gate_and_cover(hass, setup_ll, hass_ws_cli
     await hass.async_block_till_done()
     assert [c.data["entity_id"] for c in sw] in (["switch.torschalter1"], [["switch.torschalter1"]])
     assert [c.data["entity_id"] for c in cv] in (["cover.rollladen"], [["cover.rollladen"]])
+
+
+async def test_stale_dim_memory_is_not_restored(hass, setup_ll, hass_ws_client, no_debounce) -> None:
+    """ZHA lamp remembers 1 % (switched off while fading in): toggle brings it on at a real level."""
+    hass.states.async_set("light.sofa1", "off", {"off_with_transition": True, "off_brightness": 1})
+    hass.states.async_set("light.sofa2", "off", {"off_with_transition": True, "off_brightness": 254})
+    hass.states.async_set(HUE, "unknown", {"event_types": HUE_TYPES})
+    calls = async_mock_service(hass, "light", "turn_on")
+    await create(hass_ws_client, hass, {
+        "name": "Sofa", "profile": "toggle", "sources": [src(HUE)],
+        "targets": {"entity_id": ["light.sofa1", "light.sofa2"], "area_id": []},
+    })
+    fire(hass, HUE, "press_release", HUE_TYPES)
+    await hass.async_block_till_done()
+    by_entity = {}
+    for c in calls:
+        ids = c.data["entity_id"]
+        ids = ids if isinstance(ids, list) else [ids]
+        by_entity[tuple(ids)] = c.data
+    assert by_entity[("light.sofa1",)]["brightness_pct"] == 100
+    assert "brightness_pct" not in by_entity[("light.sofa2",)]

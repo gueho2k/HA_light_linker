@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
@@ -1088,6 +1088,25 @@ class Engine:
             return bool(states) and all(states)
         return any(states)
 
+    def _remembered_dim(self, lights: list[str], min_pct: int) -> list[str]:
+        """Lights that would switch on at a stale, nearly invisible level.
+
+        ZHA remembers the level a lamp had when it was switched off
+        (attribute off_brightness). Switching off while the lamp is still fading
+        in leaves 1 % there, and the next plain turn_on restores exactly that.
+        """
+        if min_pct <= 0:
+            return []
+        result: list[str] = []
+        for entity_id in lights:
+            state = self.hass.states.get(entity_id)
+            if state is None or state.state != STATE_OFF:
+                continue
+            level = state.attributes.get("off_brightness")
+            if isinstance(level, (int, float)) and 0 < level and level / 2.55 < min_pct:
+                result.append(entity_id)
+        return result
+
     async def _turn(
         self,
         link: Link,
@@ -1118,10 +1137,23 @@ class Engine:
             if opts["on_color_temp_kelvin"] is not None:
                 data["color_temp_kelvin"] = opts["on_color_temp_kelvin"]
             data.update(extra or {})
+            dim: list[str] = []
+            if "brightness_pct" not in data and "brightness" not in data:
+                dim = self._remembered_dim(lights, opts["min_on_pct"])
+            fresh = [e for e in lights if e not in dim]
             calls = [
-                self._call("light", "turn_on", lights, data, context, group),
+                self._call("light", "turn_on", fresh, data, context, group),
                 self._call("switch", "turn_on", switches, None, context),
             ]
+            if dim:
+                # the lamp remembers a stale dim level (1 %): give it a real one
+                _LOGGER.debug("%s: %s would come on very dim, using a normal level", link.name, dim)
+                calls.append(
+                    self._call(
+                        "light", "turn_on", dim,
+                        {**data, "brightness_pct": opts["on_brightness_pct"] or 100}, context, False,
+                    )
+                )
         else:
             calls = [
                 self._call("light", "turn_off", lights, {"transition": opts["transition"]}, context, group),

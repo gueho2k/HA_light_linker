@@ -2,6 +2,10 @@
 
 Verknüpft Taster und Schalter mit Lampen, Steckdosen und Garagentoren, dazu Bewegungs- und Präsenzmelder – ohne Automationen oder Node-RED-Flows. Version 0.6.1.
 
+## Neu in 0.6.2
+
+- **Lampen gehen nicht mehr mit 1 % an.** Schaltet man eine ZHA-Lampe aus, während sie noch hochfährt (schnelles Ein-Aus), merkt sie sich die Zwischenhelligkeit (1 %) und geht beim nächsten Einschalten nur so hell an. Light Linker erkennt das (`off_brightness`) und schaltet solche Lampen mit der Einschalthelligkeit des Links ein, sonst mit 100 %. Einstellbar unter „Nicht dunkler einschalten als … %“ (Standard 5, 0 = aus).
+
 ## Neu in 0.6.1
 
 - **Kalibrierung der Melder korrigiert:** Pausen zwischen zwei Bewegungen haben den Nachlauf verlängert – bei einem Hue-Melder bis auf über 2 min, mit jeder längeren Pause mehr. Ein Melder kann aber nicht unterscheiden, ob jemand still sitzt oder gegangen und wiedergekommen ist. Maßgeblich ist jetzt nur noch, wie lange der Melder „Bewegung“ selbst hält; der Nachlauf ist eingestellte Zeit minus diese Haltezeit, mindestens 5 s. Bei Hue geht das Licht damit wieder nach wenigen Sekunden aus.
