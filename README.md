@@ -1,6 +1,12 @@
+<p align="center"><img src="docs/logo.png" alt="Light Linker" width="120"></p>
+
 # Light Linker
 
 Verknüpft Taster und Schalter mit Lampen, Steckdosen und Garagentoren, dazu Bewegungs- und Präsenzmelder – ohne Automationen oder Node-RED-Flows. Version 0.6.1.
+
+## Neu in 0.6.4
+
+- **Logo.** Light Linker hat jetzt ein Logo: eine Glühbirne mit Taster im Inneren. Es liegt unter `custom_components/light_linker/brand/` (Symbol und Wortmarke, jeweils für hellen und dunklen Hintergrund) und wird von Home Assistant in der Integrationsliste angezeigt, sofern die installierte Version Logos aus der Integration lädt.
 
 ## Neu in 0.6.3
 
